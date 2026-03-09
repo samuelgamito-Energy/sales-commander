@@ -1,0 +1,23 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/dist
+
+# misc
+.DS_Store
+*.local
+
+# secrets - IMPORTANT
+.env
+.env*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
