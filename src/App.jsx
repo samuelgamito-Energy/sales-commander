@@ -21,8 +21,9 @@ const INITIAL_TASKS = [
 
 function App() {
   const [session, setSession] = useState(null);
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [tasks, setTasks] = useState([]); // Iniciamos vacío para forzar carga de DB
   const [loading, setLoading] = useState(true);
+  const [dbStatus, setDbStatus] = useState('conectando'); // 'conectando', 'online', 'error'
 
   const [editingTask, setEditingTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,14 +44,10 @@ function App() {
     });
   }, []);
 
-  // Carga de Tareas desde Supabase (si hay sesión)
+  // Carga de Tareas desde Supabase (Siempre al arrancar)
   useEffect(() => {
-    if (session) {
-      fetchTasks();
-    } else {
-      setLoading(false);
-    }
-  }, [session]);
+    fetchTasks();
+  }, []);
 
   const fetchTasks = async () => {
     try {
@@ -61,9 +58,23 @@ function App() {
         .order('id', { ascending: true });
 
       if (error) throw error;
-      if (data && data.length > 0) setTasks(data);
+      
+      if (data && data.length > 0) {
+        setTasks(data);
+        setDbStatus('online');
+      } else {
+        // Si la DB está vacía, intentamos poblarla con los iniciales automáticamente
+        console.log('Base de datos vacía, poblando con INITIAL_TASKS...');
+        const { error: seedError } = await supabase.from('tasks').upsert(INITIAL_TASKS);
+        if (seedError) throw seedError;
+        setTasks(INITIAL_TASKS);
+        setDbStatus('online');
+      }
     } catch (error) {
       console.error('Error fetching tasks:', error.message);
+      setDbStatus('error');
+      // En caso de error total de conexión, mostramos los iniciales como fallback visual
+      setTasks(INITIAL_TASKS); 
     } finally {
       setLoading(false);
     }
@@ -92,26 +103,52 @@ function App() {
   const handleSaveTask = async (e) => {
     e.preventDefault();
     try {
-      if (session) {
-        const { error } = await supabase
-          .from('tasks')
-          .upsert(editingTask);
-        if (error) throw error;
-        fetchTasks();
-      } else {
-        // Modo local por ahora si no hay sesión para pruebas
+      // Intentar guardar en Supabase primero
+      const { error } = await supabase
+        .from('tasks')
+        .upsert(editingTask);
+      
+      if (error) {
+        console.warn('Error persistiendo en Supabase, guardando localmente:', error.message);
+        // Fallback local si falla la red o permisos
         const exists = tasks.find(t => t.id === editingTask.id);
         if (exists) {
           setTasks(tasks.map(t => t.id === editingTask.id ? editingTask : t));
         } else {
           setTasks([...tasks, editingTask]);
         }
+      } else {
+        fetchTasks();
       }
     } catch (error) {
-      alert('Error al guardar: ' + error.message);
+      alert('Error crítico al guardar: ' + error.message);
     }
     setIsModalOpen(false);
     setEditingTask(null);
+  };
+
+  const handleUpdateStatus = async (task, newStatus) => {
+    const updatedTask = { ...task, status: newStatus };
+    
+    // Actualización optimista de la UI
+    setTasks(tasks.map(t => t.id === task.id ? updatedTask : t));
+
+    // Actualización en Supabase
+    try {
+      // Forzamos el upsert con referencia explícita al ID
+      const { data: updatedData, error } = await supabase
+        .from('tasks')
+        .upsert(updatedTask, { onConflict: 'id' })
+        .select();
+      
+      if (error) throw error;
+      console.log('✅ Cambio persistido en Supabase:', updatedData);
+    } catch (error) {
+      console.error('❌ Error persistiendo en Supabase:', error.message);
+      alert('¡ERROR DE PERSISTENCIA! El cambio NO se ha guardado en la nube: ' + error.message);
+      // Revertir a la versión "oficial" del servidor
+      fetchTasks();
+    }
   };
 
   const handleLogin = async (e) => {
@@ -144,6 +181,10 @@ function App() {
       <header>
         <div className="logo-container">
           <img src="/logo.svg" alt="Alumbra Logo" />
+          <div className="db-indicator" title={`Estado DB: ${dbStatus}`}>
+            <span className={`dot ${dbStatus}`}></span>
+            <span className="db-text">{dbStatus === 'online' ? 'NUBE OK' : dbStatus === 'error' ? 'MODO LOCAL' : 'CONECTANDO...'}</span>
+          </div>
         </div>
 
         <div className="filters-container">
@@ -203,9 +244,9 @@ function App() {
                   </div>
                   <div className="task-footer">
                     <div className="move-buttons">
-                      {col !== 'To Do' && <button className="btn-small" onClick={(e) => { e.stopPropagation(); setTasks(tasks.map(t => t.id === task.id ? { ...t, status: 'To Do' } : t)) }}>TODO</button>}
-                      {col !== 'In Progress' && <button className="btn-small" onClick={(e) => { e.stopPropagation(); setTasks(tasks.map(t => t.id === task.id ? { ...t, status: 'In Progress' } : t)) }}>DOING</button>}
-                      {col !== 'Done' && <button className="btn-small btn-done" onClick={(e) => { e.stopPropagation(); setTasks(tasks.map(t => t.id === task.id ? { ...t, status: 'Done' } : t)) }}>HECHO</button>}
+                      {col !== 'To Do' && <button className="btn-small" onClick={(e) => { e.stopPropagation(); handleUpdateStatus(task, 'To Do') }}>TODO</button>}
+                      {col !== 'In Progress' && <button className="btn-small" onClick={(e) => { e.stopPropagation(); handleUpdateStatus(task, 'In Progress') }}>DOING</button>}
+                      {col !== 'Done' && <button className="btn-small btn-done" onClick={(e) => { e.stopPropagation(); handleUpdateStatus(task, 'Done') }}>HECHO</button>}
                     </div>
                     <div className="owner-avatar small" title={task.owner}>
                       {task.owner ? task.owner.split(' ').map(n => n[0]).join('') : '?'}

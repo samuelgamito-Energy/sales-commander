@@ -13,15 +13,44 @@
 
 body { background-color: var(--alumbra-bg); color: var(--text-main); }
 
-header {
-  background: white;
-  padding: 0.8rem 2rem;
-  border-bottom: 3px solid var(--alumbra-garnet);
+.logo-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-  gap: 2rem;
+  gap: 1.5rem;
+}
+
+.db-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6rem;
+  font-weight: bold;
+  letter-spacing: 0.05rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffcc00; /* conectando */
+}
+
+.dot.online {
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff8888;
+}
+
+.dot.error {
+  background: #ff4444;
+  box-shadow: 0 0 8px #ff444488;
+}
+
+.db-text {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .logo-container img { height: 50px; width: auto; }

@@ -1,0 +1,2 @@
+Nueva Misión de Prueba
+Esta es una nota mandada desde el bot SecretariaSGM para probar la sincronización automática con Alumbra Commander.
