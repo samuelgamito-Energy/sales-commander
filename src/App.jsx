@@ -168,7 +168,7 @@ function App() {
           <input name="email" type="email" placeholder="Email corporativo" required />
           <input name="password" type="password" placeholder="Contraseña" required />
           <button type="submit" className="btn btn-primary">Entrar en Command Center</button>
-          <p style={{ fontSize: '0.7rem', marginTop: '1rem', color: '#888' }}>Acceso restringido a Dirección General. v0.1.1</p>
+          <p style={{ fontSize: '0.7rem', marginTop: '1rem', color: '#888' }}>Acceso restringido a Dirección General. v0.1.3</p>
         </form>
       </div>
     );
@@ -183,7 +183,7 @@ function App() {
           <img src="/logo.svg" alt="Alumbra Logo" />
           <div className="db-indicator" title={`Estado DB: ${dbStatus}`}>
             <span className={`dot ${dbStatus}`}></span>
-            <span className="db-text">{dbStatus === 'online' ? 'NUBE OK' : dbStatus === 'error' ? 'MODO LOCAL' : 'CONECTANDO...'} (v0.1.1)</span>
+            <span className="db-text">{dbStatus === 'online' ? 'NUBE OK' : dbStatus === 'error' ? 'MODO LOCAL' : 'CONECTANDO...'} (v0.1.3)</span>
           </div>
         </div>
 
