@@ -21,9 +21,11 @@ const INITIAL_TASKS = [
 
 function App() {
   const [session, setSession] = useState(null);
-  const [tasks, setTasks] = useState([]); // Iniciamos vacío para forzar carga de DB
+  const [tasks, setTasks] = useState([]); 
   const [loading, setLoading] = useState(true);
-  const [dbStatus, setDbStatus] = useState('conectando'); // 'conectando', 'online', 'error'
+  const [dbStatus, setDbStatus] = useState('conectando'); 
+  const table = import.meta.env.VITE_SUPABASE_TABLE || 'tasks';
+  const appTitle = import.meta.env.VITE_APP_TITLE || 'Alumbra Commander';
 
   const [editingTask, setEditingTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,7 +55,7 @@ function App() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('tasks')
+        .from(table)
         .select('*')
         .order('id', { ascending: true });
 
@@ -105,7 +107,7 @@ function App() {
     try {
       // Intentar guardar en Supabase primero
       const { error } = await supabase
-        .from('tasks')
+        .from(table)
         .upsert(editingTask);
       
       if (error) {
@@ -137,7 +139,7 @@ function App() {
     try {
       // Forzamos el upsert con referencia explícita al ID
       const { data: updatedData, error } = await supabase
-        .from('tasks')
+        .from(table)
         .upsert(updatedTask, { onConflict: 'id' })
         .select();
       
@@ -168,7 +170,7 @@ function App() {
           <input name="email" type="email" placeholder="Email corporativo" required />
           <input name="password" type="password" placeholder="Contraseña" required />
           <button type="submit" className="btn btn-primary">Entrar en Command Center</button>
-          <p style={{ fontSize: '0.7rem', marginTop: '1rem', color: '#888' }}>Acceso restringido a Dirección General. v0.1.6</p>
+          <p style={{ fontSize: '0.7rem', marginTop: '1rem', color: '#888' }}>Acceso restringido a Dirección General. v0.1.7</p>
         </form>
       </div>
     );
@@ -181,9 +183,10 @@ function App() {
       <header>
         <div className="logo-container">
           <img src="/logo.svg" alt="Alumbra Logo" />
+          <h1 className="app-main-title">{appTitle}</h1>
           <div className="db-indicator" title={`Estado DB: ${dbStatus}`}>
             <span className={`dot ${dbStatus}`}></span>
-            <span className="db-text">{dbStatus === 'online' ? 'NUBE OK' : dbStatus === 'error' ? 'MODO LOCAL' : 'CONECTANDO...'} (v0.1.6)</span>
+            <span className="db-text">{dbStatus === 'online' ? 'NUBE OK' : dbStatus === 'error' ? 'MODO LOCAL' : 'CONECTANDO...'} (v0.1.7)</span>
           </div>
         </div>
 
