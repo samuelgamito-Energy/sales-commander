@@ -1,12 +1,11 @@
 {
   "name": "alumbra-commander",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "echo 'Skipping lint for live deploy'",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -17,8 +16,5 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.0.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }

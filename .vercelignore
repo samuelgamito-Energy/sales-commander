@@ -1,0 +1,8 @@
+scripts/
+inbox_telegram/
+.git/
+node_modules/
+.env
+debug_*.bat
+lanzar_commander.bat
+package-lock.json
