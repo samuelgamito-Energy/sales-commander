@@ -10,9 +10,24 @@ Deno.serve(async (req) => {
 
     const text = message.text.trim()
     const TRIGGER = "Mete esto en commander"
+    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
+
+    // DEBUG: Siempre responde a "hola" o similar para ver que está viva
+    if (text.toLowerCase() === 'hola' || text.toLowerCase() === 'test') {
+      if (botToken) {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: message.chat.id,
+            text: `👋 ¡Hola Samuel! El cerebro de Alumbra Commander está VIVO y conectado. 🧠⚡`
+          })
+        })
+      }
+      return new Response('Debug response sent', { status: 200 })
+    }
 
     if (text.toLowerCase().includes(TRIGGER.toLowerCase())) {
-      // Extraer el contenido real después del disparador
       const content = text.slice(text.toLowerCase().indexOf(TRIGGER.toLowerCase()) + TRIGGER.length).trim()
       
       if (!content) {
@@ -23,7 +38,6 @@ Deno.serve(async (req) => {
       const title = lines[0].trim()
       const notes = lines.slice(1).join('\n').trim() || 'Importado desde Telegram'
 
-      // Configurar cliente Supabase (usa variables de entorno de la Edge Function)
       const supabase = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -47,11 +61,20 @@ Deno.serve(async (req) => {
 
       if (error) {
         console.error('Error inyectando tarea:', error.message)
+        // Responder con el error para debuggear
+        if (botToken) {
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: message.chat.id,
+              text: `❌ Error de base de datos: ${error.message}`
+            })
+          })
+        }
         return new Response('Error saving task', { status: 500 })
       }
 
-      // Opcional: Responder a Telegram para confirmar
-      const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
       if (botToken) {
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',
