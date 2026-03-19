@@ -153,6 +153,29 @@ function App() {
     }
   };
 
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar esta misión? Esta acción no se puede deshacer.')) return;
+
+    // Actualización optimista
+    setTasks(tasks.filter(t => t.id !== taskId));
+
+    try {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', taskId);
+      
+      if (error) throw error;
+      console.log('✅ Tarea eliminada de Supabase');
+    } catch (error) {
+      console.error('❌ Error eliminando de Supabase:', error.message);
+      alert('Error al eliminar: ' + error.message);
+      fetchTasks();
+    }
+    setIsModalOpen(false);
+    setEditingTask(null);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
@@ -231,6 +254,7 @@ function App() {
             <div className="task-scroll">
               {filteredTasks.filter(t => t.status === col).map(task => (
                 <div key={task.id} className="task-card" onClick={() => { setEditingTask(task); setIsModalOpen(true); }}>
+                  <button className="delete-btn-card" onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} title="Eliminar tarea">×</button>
                   <div className="task-header">
                     <span className={`tag tag-priority-${task.priority}`}>{task.priority}</span>
                     <div className="tags-list">
@@ -277,7 +301,11 @@ function App() {
               <div className="form-group"><label>Responsable</label><input value={editingTask.owner} onChange={e => setEditingTask({ ...editingTask, owner: e.target.value })} /></div>
             </div>
             <div className="form-group"><label>Tags</label><input value={editingTask.tags ? editingTask.tags.join(', ') : ''} onChange={e => setEditingTask({ ...editingTask, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t !== '') })} /></div>
-            <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">Guardar</button></div>
+            <div className="modal-footer">
+              {editingTask.id && <button type="button" className="btn btn-danger" style={{ marginRight: 'auto' }} onClick={() => handleDeleteTask(editingTask.id)}>Eliminar</button>}
+              <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+              <button type="submit" className="btn btn-primary">Guardar</button>
+            </div>
           </form>
         </div>
       )}
