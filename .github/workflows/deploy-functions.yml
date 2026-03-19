@@ -22,7 +22,11 @@ jobs:
 
       - name: Set Supabase Secrets
         run: |
-          supabase secrets set --project-ref ${{ secrets.SUPABASE_PROJECT_ID }} TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          supabase secrets set --project-ref ${{ secrets.SUPABASE_PROJECT_ID }} \
+            TELEGRAM_TOKEN_SECRETARIA=${{ secrets.TELEGRAM_TOKEN_SECRETARIA }} \
+            TELEGRAM_TOKEN_ALUMBRA=${{ secrets.TELEGRAM_TOKEN_ALUMBRA }} \
+            TELEGRAM_TOKEN_POWERTRADER=${{ secrets.TELEGRAM_TOKEN_POWERTRADER }} \
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
