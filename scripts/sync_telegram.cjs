@@ -40,7 +40,7 @@ async function sync() {
             }
 
             // Ejecutar el script add_task.cjs con los datos
-            const cmd = `node "${ADD_TASK_SCRIPT}" "${taskData.title || 'Misión sin título'}" "${taskData.notes || ''}" "${taskData.priority || 'Media'}" "${taskData.owner || 'Samuel Gamito'}" "${taskData.tags || 'Telegram'}"`;
+            const cmd = `node "${ADD_TASK_SCRIPT}" "${taskData.title || 'Misión sin título'}" "${taskData.notes || ''}" "${taskData.priority || 'Media'}" "${taskData.owner || 'Samuel Gamito'}" "${taskData.tags || 'Telegram'}" "${taskData.id || ''}"`;
 
             execSync(cmd, { stdio: 'inherit' });
 
