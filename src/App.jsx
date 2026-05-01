@@ -205,7 +205,7 @@ function App() {
     <div className="app">
       <header>
         <div className="logo-container">
-          <img src="/logo.svg" alt="Alumbra Logo" />
+          <img src="/icon-512.png" alt="Sales Commander Logo" />
           <h1 className="app-main-title">{appTitle}</h1>
         </div>
 
