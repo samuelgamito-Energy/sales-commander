@@ -16,20 +16,21 @@ body { background-color: var(--alumbra-bg); color: var(--text-main); }
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
+  flex-shrink: 0;
 }
 
 .db-indicator {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.65rem;
-  font-weight: bold;
+  gap: 0.4rem;
+  font-size: 0.6rem;
+  font-weight: 800;
   letter-spacing: 0.05rem;
-  background: rgba(93, 21, 80, 0.05);
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(93, 21, 80, 0.2);
+  background: rgba(93, 21, 80, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--alumbra-garnet);
   white-space: nowrap;
 }
 
@@ -265,10 +266,12 @@ body { background-color: var(--alumbra-bg); color: var(--text-main); }
 
   .filters-container {
     width: 100%;
-    overflow-x: auto;
+    overflow-x: hidden;
     justify-content: flex-start;
     padding-bottom: 0.5rem;
-    gap: 0.8rem;
+    gap: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .filter-group select {

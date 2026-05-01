@@ -24,8 +24,8 @@ function App() {
   const [tasks, setTasks] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState('conectando'); 
-  const table = 'tasks_sales'; // Fijo para Sales Commander
-  const appTitle = import.meta.env.VITE_APP_TITLE || 'Sales Commander';
+  const table = 'tasks_sales'; 
+  const appTitle = 'Sales Commander';
 
   const [editingTask, setEditingTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,7 +67,7 @@ function App() {
       } else {
         // Si la DB está vacía, intentamos poblarla con los iniciales automáticamente
         console.log('Base de datos vacía, poblando con INITIAL_TASKS...');
-        const { error: seedError } = await supabase.from(table).upsert(INITIAL_TASKS);
+        const { error: seedError } = await supabase.from('tasks').upsert(INITIAL_TASKS);
         if (seedError) throw seedError;
         setTasks(INITIAL_TASKS);
         setDbStatus('online');
@@ -193,7 +193,7 @@ function App() {
           <input name="email" type="email" placeholder="Email corporativo" required />
           <input name="password" type="password" placeholder="Contraseña" required />
           <button type="submit" className="btn btn-primary">Entrar al Panel Comercial</button>
-          <p style={{ fontSize: '0.7rem', marginTop: '1rem', color: '#888' }}>Acceso restringido a Equipo Comercial.</p>
+          <p style={{ fontSize: '0.7rem', marginTop: '1rem', color: '#888' }}>Acceso restringido a Equipo Comercial. v0.1.7</p>
         </form>
       </div>
     );
@@ -207,10 +207,6 @@ function App() {
         <div className="logo-container">
           <img src="/logo.svg" alt="Alumbra Logo" />
           <h1 className="app-main-title">{appTitle}</h1>
-          <div className="db-indicator" title={`Estado DB: ${dbStatus}`}>
-            <span className={`dot ${dbStatus}`}></span>
-            <span className="db-text">{dbStatus === 'online' ? 'NUBE OK' : dbStatus === 'error' ? 'MODO LOCAL' : 'CONECTANDO...'} (v0.1.7)</span>
-          </div>
         </div>
 
         <div className="filters-container">
@@ -235,6 +231,10 @@ function App() {
         </div>
 
         <div className="header-actions">
+          <div className="db-indicator" title={`Estado DB: ${dbStatus}`}>
+            <span className={`dot ${dbStatus}`}></span>
+            <span className="db-text">{dbStatus === 'online' ? 'NUBE OK' : 'OFFLINE'}</span>
+          </div>
           <button className="btn btn-primary" onClick={() => {
             setEditingTask({ id: Date.now(), title: '', notes: '', status: 'To Do', priority: 'Media', owner: 'Fernando Nieto', created: new Date().toISOString().split('T')[0], deadline: '', tags: [] });
             setIsModalOpen(true);
