@@ -1,15 +1,22 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+interface Agent {
+  token: string | undefined;
+  name: string;
+  instruction: string;
+}
 
-const AGENTS = {
+// Configuración de Agentes (Sincronizado con contexto_secretaria.md)
+const AGENTS: Record<string, Agent> = {
   "secretaria": {
     token: Deno.env.get('TELEGRAM_TOKEN_SECRETARIA'),
     name: "Secretaria Personal",
     instruction: `Eres la Secretaria Personal de Samuel. Eficiente, amable y resolutiva. 
-    Puedes crear misiones con 'crear_tarea_commander' y borrarlas con 'borrar_tarea_commander'.`
+    Tu misión es gestionar archivos y tareas en 'Alumbra Commander'. 
+    - Puedes crear misiones con 'crear_tarea_commander'.
+    - Puedes EDITAR misiones existentes con 'editar_tarea_commander' (primero busca el ID con 'listar_tareas_commander').
+    - Puedes borrar misiones con 'borrar_tarea_commander'.
+    - Sé breve en respuestas de seguimiento basadas en el historial reciente.`
   },
   "alumbra": {
     token: Deno.env.get('TELEGRAM_TOKEN_ALUMBRA'),
@@ -23,12 +30,12 @@ const AGENTS = {
   }
 }
 
-const tools = [
+const TOOLS = [
   {
     function_declarations: [
       {
         name: "crear_tarea_commander",
-        description: "Crea una nueva tarea en Alumbra Commander.",
+        description: "Crea una nueva tarea.",
         parameters: {
           type: "object",
           properties: {
@@ -42,104 +49,145 @@ const tools = [
         }
       },
       {
-        name: "borrar_tarea_commander",
-        description: "Borra una tarea existente buscando por similitud en el título.",
+        name: "listar_tareas_commander",
+        description: "Lista las últimas tareas para buscar IDs o ver estado.",
         parameters: {
           type: "object",
           properties: {
-            query_titulo: { type: "string", description: "Palabra clave o título de la tarea a borrar." }
+            responsable: { type: "string", description: "Opcional: Filtrar por responsable." }
+          }
+        }
+      },
+      {
+        name: "editar_tarea_commander",
+        description: "Edita una tarea existente por su ID.",
+        parameters: {
+          type: "object",
+          properties: {
+            id: { type: "number" },
+            titulo: { type: "string" },
+            notas: { type: "string" },
+            prioridad: { type: "string" },
+            responsable: { type: "string" }
           },
-          required: ["query_titulo"]
+          required: ["id"]
+        }
+      },
+      {
+        name: "borrar_tarea_commander",
+        description: "Borra una tarea por ID o coincidencia de título.",
+        parameters: {
+          type: "object",
+          properties: {
+            query: { type: "string" }
+          },
+          required: ["query"]
         }
       }
     ]
   }
 ]
 
-async function handleAgentRequest(agent, chatId, text) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`
+async function handleAgentRequest(agent: Agent, agentKey: string, chatId: number, text: string) {
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+
+  // 1. Cargar Historial
+  const { data: historyData } = await supabase
+    .from('chat_history')
+    .select('role, content')
+    .eq('chat_id', chatId)
+    .eq('agent', agentKey)
+    .order('created_at', { ascending: true })
+    .limit(15)
+
+  const history = historyData || []
+  const currentMsg = { role: 'user', parts: [{ text: text }] }
+
+  // 2. Llamada a Gemini
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${Deno.env.get('GEMINI_API_KEY')}`
   const payload = {
-    contents: [{ parts: [{ text: text }] }],
+    contents: [...history, currentMsg],
     system_instruction: { parts: [{ text: agent.instruction }] },
-    tools: tools
+    tools: TOOLS
   }
 
   const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-  const data = await response.json()
-  const part = data.candidates?.[0]?.content?.parts?.[0]
+  const result = await response.json()
+  const candidate = result.candidates?.[0]?.content
+  let aiResponse = candidate?.parts?.[0]?.text || "Recibido."
 
-  if (part?.functionCall) {
-    const { name, args } = part.functionCall
-    if (name === "crear_tarea_commander") {
-      const res = await executeCreateTask(args, agent.name)
-      await sendMessage(agent.token, chatId, res)
-      return
-    }
-    if (name === "borrar_tarea_commander") {
-      const res = await executeDeleteTask(args)
-      await sendMessage(agent.token, chatId, res)
-      return
-    }
+  // 3. Procesar Tool Calls (si hay)
+  if (candidate?.parts?.[0]?.functionCall) {
+    const { name, args } = candidate.parts[0].functionCall
+    let toolResult = ""
+    
+    if (name === "crear_tarea_commander") toolResult = await executeCreateTask(supabase, args as any, agent.name)
+    else if (name === "listar_tareas_commander") toolResult = await executeListTasks(supabase, args as any)
+    else if (name === "editar_tarea_commander") toolResult = await executeUpdateTask(supabase, args as any)
+    else if (name === "borrar_tarea_commander") toolResult = await executeDeleteTask(supabase, args as any)
+    
+    // Si hubo herramienta, reportamos el resultado
+    aiResponse = toolResult
   }
 
-  const aiText = part?.text || "Recibido. ¿En qué más puedo ayudarte?"
-  await sendMessage(agent.token, chatId, aiText)
+  // 4. Guardar en Historial (Usuario y Modelo)
+  await supabase.from('chat_history').insert([
+    { chat_id: chatId, agent: agentKey, role: 'user', content: currentMsg },
+    { chat_id: chatId, agent: agentKey, role: 'model', content: { role: 'model', parts: [{ text: aiResponse }] } }
+  ])
+
+  if (agent.token) await sendMessage(agent.token, chatId, aiResponse)
 }
 
-async function executeCreateTask(args, agentName) {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-  const tagsArray = args.tags ? args.tags.split(',').map(t => t.trim()) : []
-  tagsArray.push(agentName, 'Cloud')
+// --- UTILIDADES ---
+
+async function executeCreateTask(supabase: any, args: any, agentName: string) {
   const { error } = await supabase.from('tasks').insert([{
     id: Date.now(), title: args.titulo, notes: args.notas || '', status: 'To Do',
     priority: args.prioridad || 'Media', owner: args.responsable || 'Samuel Gamito',
-    created: new Date().toISOString().split('T')[0], tags: tagsArray
+    created: new Date().toISOString().split('T')[0], tags: [agentName, 'Cloud']
   }])
   return error ? `❌ Error: ${error.message}` : `✅ Inyectada: "${args.titulo}" 🚀`
 }
 
-async function executeDeleteTask(args) {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-  // 1. Buscar coincidencia
-  const { data, error: searchError } = await supabase
-    .from('tasks')
-    .select('id, title')
-    .ilike('title', `%${args.query_titulo}%`)
-
-  if (searchError) return `❌ Error buscando tarea: ${searchError.message}`
-  if (!data || data.length === 0) return `🔍 No he encontrado ninguna tarea que coincida con "${args.query_titulo}".`
-  if (data.length > 1) {
-    const matches = data.map(t => `- ${t.title}`).join('\n')
-    return `⚠️ He encontrado varias coincidencias. ¿Cuál quieres borrar?\n${matches}`
-  }
-
-  // 2. Borrar la única coincidencia
-  const { error: deleteError } = await supabase
-    .from('tasks')
-    .delete()
-    .eq('id', data[0].id)
-
-  return deleteError ? `❌ Error borrando: ${deleteError.message}` : `🗑️ Tarea "${data[0].title}" eliminada del tablero.`
+async function executeListTasks(supabase: any, args: any) {
+  let query = supabase.from('tasks').select('id, title, status, owner').order('created', { ascending: false }).limit(10)
+  if (args.responsable) query = query.ilike('owner', `%${args.responsable}%`)
+  const { data } = await query
+  if (!data || data.length === 0) return "🔍 No he encontrado tareas pendientes."
+  return "📋 **Tareas Recientes:**\n" + data.map((t: any) => `- [${t.id}] ${t.title} (${t.owner})`).join('\n')
 }
 
-async function sendMessage(botToken, chatId, text) {
-  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+async function executeUpdateTask(supabase: any, args: any) {
+  const updateData: any = {}
+  if (args.titulo) updateData.title = args.titulo
+  if (args.notas) updateData.notes = args.notas
+  if (args.prioridad) updateData.priority = args.prioridad
+  if (args.responsable) updateData.owner = args.responsable
+  const { error } = await supabase.from('tasks').update(updateData).eq('id', args.id)
+  return error ? `❌ Error editando: ${error.message}` : `✅ Tarea ID ${args.id} actualizada.`
+}
+
+async function executeDeleteTask(supabase: any, args: any) {
+  const { data } = await supabase.from('tasks').select('id, title').ilike('title', `%${args.query}%`)
+  if (!data?.length) return `🔍 No existe nada parecido a "${args.query}".`
+  if (data.length > 1) return `⚠️ Hay varias coincidencias para "${args.query}", por favor sé más específico.`
+  const { error } = await supabase.from('tasks').delete().eq('id', data[0].id)
+  return error ? `❌ Error: ${error.message}` : `🗑️ Tarea "${data[0].title}" eliminada.`
+}
+
+async function sendMessage(token: string, chatId: number, text: string) {
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text: text })
+    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
   })
 }
 
 Deno.serve(async (req) => {
-  try {
-    const { message } = await req.json()
-    if (!message || !message.text) return new Response('OK', { status: 200 })
-    const url = new URL(req.url)
-    const agentKey = url.searchParams.get('agent') || 'secretaria'
-    const agent = AGENTS[agentKey]
-    if (!agent) return new Response('Bot error', { status: 200 })
-    await handleAgentRequest(agent, message.chat.id, message.text)
-    return new Response('OK', { status: 200 })
-  } catch (err) {
-    return new Response('ERR', { status: 200 })
+  const payload = await req.json()
+  const agentKey = new URL(req.url).searchParams.get('agent') || 'secretaria'
+  if (payload.message?.text) {
+    await handleAgentRequest(AGENTS[agentKey], agentKey, payload.message.chat.id, payload.message.text)
   }
+  return new Response('OK')
 })

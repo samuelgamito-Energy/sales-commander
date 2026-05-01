@@ -1,0 +1,17 @@
+{
+  "short_name": "Sales",
+  "name": "Sales Commander",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0a0a0b",
+  "background_color": "#0a0a0b",
+  "orientation": "portrait"
+}

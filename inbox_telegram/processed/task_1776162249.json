@@ -1,0 +1,10 @@
+{
+    "title": "Revisión de temas pendientes",
+    "notes": "FNEE: Revisar estado y acciones pendientes.\nATC: Revisión general de procesos.\nScoring: Analizar resultados y proponer mejoras.\nContratación Televenta: Verificar el cumplimiento de los procesos de contratación.\nFlota: Detalle de la flota",
+    "priority": "Media",
+    "owner": "Caroll Orduz",
+    "deadline": "2024-07-03",
+    "tags": [
+        "Telegram"
+    ]
+}

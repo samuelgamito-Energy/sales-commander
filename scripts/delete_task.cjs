@@ -24,7 +24,7 @@ async function deleteTask() {
 
     // 1. Intentar borrar por ID
     if (!isNaN(identifier)) {
-        const { error } = await supabase.from('tasks').delete().eq('id', identifier);
+        const { error } = await supabase.from('tasks_sales').delete().eq('id', identifier);
         if (!error) {
             console.log(`✅ Tarea con ID ${identifier} eliminada.`);
             process.exit(0);
@@ -33,7 +33,7 @@ async function deleteTask() {
 
     // 2. Si no es número o falló por ID, buscar por título
     const { data, error: searchError } = await supabase
-        .from('tasks')
+        .from('tasks_sales')
         .select('id, title')
         .ilike('title', `%${identifier}%`);
 
@@ -47,7 +47,7 @@ async function deleteTask() {
     } else if (data.length > 1) {
         console.log(`⚠️ Se encontraron varias coincidencias. Por favor usa el ID:\n${data.map(t => `- [${t.id}] ${t.title}`).join('\n')}`);
     } else {
-        const { error: delError } = await supabase.from('tasks').delete().eq('id', data[0].id);
+        const { error: delError } = await supabase.from('tasks_sales').delete().eq('id', data[0].id);
         if (delError) {
             console.error('Error al borrar:', delError.message);
             process.exit(1);

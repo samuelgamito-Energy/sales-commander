@@ -1,0 +1,10 @@
+{
+  "name": "sales-commander",
+  "framework": "vite",
+  "env": {
+    "VITE_SUPABASE_URL": "https://imcjrteafzifqobyxihy.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltY2pydGVhZnppZnFvYnl4aWh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNTcyOTksImV4cCI6MjA4ODYzMzI5OX0.ram1mS3fommE3Dw61sbG61p2tSkd-TqgY_2PB_J1fd4",
+    "VITE_SUPABASE_TABLE": "tasks_sales",
+    "VITE_APP_TITLE": "Sales Commander"
+  }
+}

@@ -19,8 +19,8 @@ async function listTasks() {
     const filterOwner = args[0];
 
     let query = supabase
-        .from('tasks')
-        .select('id, title, status, priority, owner, deadline')
+        .from('tasks_sales')
+        .select('id, title, notes, status, priority, owner, deadline')
         .order('created', { ascending: false })
         .limit(15);
 
@@ -34,9 +34,10 @@ async function listTasks() {
         console.error('Error al listar:', error.message);
         process.exit(1);
     } else {
-        console.log('--- TAREAS EN COMMANDER ---');
+        console.log('--- [MODO VENTAS | TABLA: tasks_sales] ---');
         data.forEach(t => {
-            console.log(`[${t.id}] ${t.title} | ${t.status} | ${t.owner} | ${t.priority} ${t.deadline ? '| Vence: ' + t.deadline : ''}`);
+            let noteStr = t.notes ? `\n   > NOTAS/ANOTACIONES: ${t.notes}` : '';
+            console.log(`[${t.id}] ${t.title} | ${t.status} | ${t.owner} | ${t.priority} ${t.deadline ? '| Vence: ' + t.deadline : ''}${noteStr}`);
         });
     }
 }

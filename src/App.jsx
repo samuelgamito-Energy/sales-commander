@@ -24,8 +24,8 @@ function App() {
   const [tasks, setTasks] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState('conectando'); 
-  const table = import.meta.env.VITE_SUPABASE_TABLE || 'tasks';
-  const appTitle = import.meta.env.VITE_APP_TITLE || 'Alumbra Commander';
+  const table = 'tasks_sales'; // Fijo para Sales Commander
+  const appTitle = import.meta.env.VITE_APP_TITLE || 'Sales Commander';
 
   const [editingTask, setEditingTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,7 +67,7 @@ function App() {
       } else {
         // Si la DB está vacía, intentamos poblarla con los iniciales automáticamente
         console.log('Base de datos vacía, poblando con INITIAL_TASKS...');
-        const { error: seedError } = await supabase.from('tasks').upsert(INITIAL_TASKS);
+        const { error: seedError } = await supabase.from(table).upsert(INITIAL_TASKS);
         if (seedError) throw seedError;
         setTasks(INITIAL_TASKS);
         setDbStatus('online');
@@ -189,11 +189,11 @@ function App() {
       <div className="login-screen">
         <form className="login-card" onSubmit={handleLogin}>
           <img src="/logo.svg" alt="Alumbra" style={{ height: '60px', marginBottom: '2rem' }} />
-          <h2>Acceso DG</h2>
+          <h2>Sales Commander</h2>
           <input name="email" type="email" placeholder="Email corporativo" required />
           <input name="password" type="password" placeholder="Contraseña" required />
-          <button type="submit" className="btn btn-primary">Entrar en Command Center</button>
-          <p style={{ fontSize: '0.7rem', marginTop: '1rem', color: '#888' }}>Acceso restringido a Dirección General. v0.1.7</p>
+          <button type="submit" className="btn btn-primary">Entrar al Panel Comercial</button>
+          <p style={{ fontSize: '0.7rem', marginTop: '1rem', color: '#888' }}>Acceso restringido a Equipo Comercial.</p>
         </form>
       </div>
     );
@@ -236,10 +236,10 @@ function App() {
 
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => {
-            setEditingTask({ id: Date.now(), title: '', notes: '', status: 'To Do', priority: 'Media', owner: 'Samuel Gamito', created: new Date().toISOString().split('T')[0], deadline: '', tags: [] });
+            setEditingTask({ id: Date.now(), title: '', notes: '', status: 'To Do', priority: 'Media', owner: 'Fernando Nieto', created: new Date().toISOString().split('T')[0], deadline: '', tags: [] });
             setIsModalOpen(true);
           }}>+ Nueva Tarea</button>
-          <div className="owner-avatar">SG</div>
+          <div className="owner-avatar">FN</div>
           {session && <button onClick={() => supabase.auth.signOut()} style={{ fontSize: '0.6rem', color: 'red', background: 'none', border: 'none', cursor: 'pointer' }}>Salir</button>}
         </div>
       </header>

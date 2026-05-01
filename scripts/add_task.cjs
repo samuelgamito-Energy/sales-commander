@@ -39,7 +39,7 @@ async function manageTask() {
     };
 
     const { data, error } = await supabase
-        .from('tasks')
+        .from('tasks_sales')
         .upsert([task], { onConflict: 'id' });
 
     if (error) {
