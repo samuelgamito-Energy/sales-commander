@@ -27,7 +27,7 @@ body { background-color: var(--alumbra-bg); color: var(--text-main); }
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.05rem;
-  background: rgba(93, 21, 80, 0.1);
+  background: rgba(0, 255, 136, 0.1);
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid var(--alumbra-garnet);
