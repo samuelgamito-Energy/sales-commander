@@ -1,6 +1,6 @@
 :root {
-  --alumbra-garnet: #5d1550; /* Deep Alumbra Garnet */
-  --alumbra-green: #00ff88;
+  --alumbra-garnet: #00ff88; /* Swapped to Green for Sales Commander */
+  --alumbra-green: #5d1550; /* Swapped to Garnet */
   --alumbra-dark: #1a1a1a;
   --alumbra-bg: #f8f9fa;
   --alumbra-surface: #ffffff;
@@ -136,7 +136,7 @@ body { background-color: var(--alumbra-bg); color: var(--text-main); }
   transition: all 0.2s ease;
   cursor: pointer;
 }
-.task-card:hover { border-color: var(--alumbra-garnet); box-shadow: 0 0 15px rgba(0, 243, 255, 0.15); }
+.task-card:hover { border-color: var(--alumbra-garnet); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); }
 
 .task-header { display: flex; justify-content: space-between; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 0.4rem; }
 .tag { font-size: 0.55rem; padding: 0.1rem 0.4rem; border-radius: 2px; background: #2d2d3d; font-weight: 700; color: var(--text-muted); border: 1px solid var(--alumbra-border); }
@@ -166,7 +166,7 @@ body { background-color: var(--alumbra-bg); color: var(--text-main); }
 .btn-small:hover { background: #e9ecef; }
 .btn-small.btn-done { background: var(--alumbra-garnet); color: white; border: none; }
 
-.owner-avatar { width: 28px; height: 28px; border-radius: 6px; background: var(--alumbra-garnet); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; }
+.owner-avatar { width: 28px; height: 28px; border-radius: 6px; background: var(--alumbra-garnet); color: #000; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; }
 .owner-avatar.small { width: 24px; height: 24px; font-size: 0.65rem; }
 
 .app-main-title {
@@ -181,8 +181,8 @@ body { background-color: var(--alumbra-bg); color: var(--text-main); }
 }
 
 .btn { padding: 0.7rem 1.4rem; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; }
-.btn-primary { background: var(--alumbra-garnet); color: white; box-shadow: 0 4px 10px rgba(93, 21, 80, 0.2); }
-.btn-primary:hover { background: #4a1140; }
+.btn-primary { background: var(--alumbra-garnet); color: #000; box-shadow: 0 4px 10px rgba(0, 255, 136, 0.2); }
+.btn-primary:hover { background: #00e67a; }
 .btn-secondary { background: #f1f3f5; color: #495057; }
 
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 1rem; }
@@ -206,7 +206,7 @@ body { background-color: var(--alumbra-bg); color: var(--text-main); }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--alumbra-garnet) 0%, #2a0a24 100%);
+  background: linear-gradient(135deg, var(--alumbra-garnet) 0%, #004d2c 100%);
 }
 
 .login-card {
